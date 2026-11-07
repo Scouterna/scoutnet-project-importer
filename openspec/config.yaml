@@ -1,0 +1,21 @@
+schema: spec-driven
+
+context: |
+  Scoutnet Project Importer: web app that lets event organisers add or update participants' form answers in a Scoutnet
+  project ("arrangemang") from an Excel/CSV file.
+  Single-page frontend (Vite + React + MUI + TanStack Router/Query/Table/Virtual, SheetJS) plus a thin, stateless Hono server
+  that only forwards to the Scoutnet API (Scoutnet answers OPTIONS preflight with 401, so browsers can't call it directly).
+  One container on Kubernetes, several replicas, no sticky sessions.
+  Runtime is Node 26 (`fnm use 26`). The server runs .ts directly via native type stripping: no build step, erasable syntax only
+  (no enums, namespaces or parameter properties), and relative imports use the .ts extension.
+  The server stores nothing: no sessions, database or files. Credentials travel per request and are forwarded as Basic auth.
+  Never log Authorization headers, bodies or participant data. The spreadsheet never leaves the browser, and participant data
+  is never written to browser storage.
+  Must stay responsive with 20,000 participants and 20,000 rows: parsing, matching and diffing run in a Web Worker.
+  Nothing is written to Scoutnet without explicit user confirmation; write bodies carry question answers only, never checked_in/attended.
+
+operations:
+  apply:
+    guidance:
+      - Implement by delegating task groups to subagents. Use model "sonnet" for non-trivial work (matching, value mapping, write-back and batching, Scoutnet API integration, workers, multi-file features, UI flows) and "haiku" for mechanical work (config, boilerplate, simple routes, docs).
+      - The orchestrator reviews each subagent's result, runs typecheck/tests, and ticks tasks only after verifying them.
